@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package dse.coordinator;
+
+option cc_enable_arenas = true;
+
+// Coordinator RPCs for leader election and cluster coordination.
+
+message ElectionRequest {
+  string candidate_id = 1;
+  uint64 priority = 2;
+}
+
+message ElectionResponse {
+  bool ack = 1;
+  string current_leader = 2;
+}
+
+message LeaderAnnounceRequest {
+  string leader_id = 1;
+  uint64 generation = 2;
+}
+
+message LeaderAnnounceResponse {
+  bool ack = 1;
+}
+
+message CoordinatorHeartbeatRequest {
+  string node_id = 1;
+  uint64 timestamp_ms = 2;
+}
+
+message CoordinatorHeartbeatResponse {
+  bool success = 1;
+  string leader_id = 2;
+  uint64 generation = 3;
+}
+
+message TriggerRecoveryRequest {
+  string failed_node_id = 1;
+}
+
+message TriggerRecoveryResponse {
+  bool success = 1;
+  string message = 2;
+  uint32 chunks_recovered = 3;
+}
+
+message GetLeaderRequest {}
+
+message GetLeaderResponse {
+  string leader_id = 1;
+  uint64 generation = 2;
+  bool is_leader = 3;
+}
+
+service CoordinatorService {
+  rpc RequestElection(ElectionRequest) returns (ElectionResponse);
+  rpc AnnounceLeader(LeaderAnnounceRequest) returns (LeaderAnnounceResponse);
+  rpc CoordinatorHeartbeat(CoordinatorHeartbeatRequest) returns (CoordinatorHeartbeatResponse);
+  rpc TriggerRecovery(TriggerRecoveryRequest) returns (TriggerRecoveryResponse);
+  rpc GetLeader(GetLeaderRequest) returns (GetLeaderResponse);
+}

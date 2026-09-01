@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package dse.storage;
+
+option cc_enable_arenas = true;
+
+// Storage node RPCs for chunk read/write/replication.
+
+message ChunkHeader {
+  string chunk_id = 1;
+  string object_id = 2;
+  uint32 version = 3;
+  uint64 size = 4;
+  string checksum = 5;
+  uint64 created_at_ms = 6;
+}
+
+message WriteChunkRequest {
+  ChunkHeader header = 1;
+  bytes data = 2;
+  bool is_replica = 3;
+}
+
+message WriteChunkResponse {
+  bool success = 1;
+  string message = 2;
+  string checksum = 3;
+}
+
+message ReadChunkRequest {
+  string chunk_id = 1;
+  uint64 offset = 2;
+  uint64 length = 3;
+}
+
+message ReadChunkResponse {
+  bool success = 1;
+  string message = 2;
+  ChunkHeader header = 3;
+  bytes data = 4;
+}
+
+message DeleteChunkRequest {
+  string chunk_id = 1;
+}
+
+message DeleteChunkResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ReplicateChunkRequest {
+  ChunkHeader header = 1;
+  bytes data = 2;
+  string source_node_id = 3;
+}
+
+message ReplicateChunkResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message HeartbeatRequest {
+  string node_id = 1;
+  uint64 timestamp_ms = 2;
+  uint64 free_bytes = 3;
+  uint64 total_bytes = 4;
+  uint64 chunk_count = 5;
+  string address = 6;
+}
+
+message HeartbeatResponse {
+  bool success = 1;
+  string message = 2;
+  bool is_leader = 3;
+  string leader_id = 4;
+}
+
+message NodeStatusRequest {
+  string node_id = 1;
+}
+
+message NodeStatusResponse {
+  bool online = 1;
+  uint64 free_bytes = 2;
+  uint64 total_bytes = 3;
+  uint64 chunk_count = 4;
+  string address = 5;
+}
+
+message VerifyChunkRequest {
+  string chunk_id = 1;
+}
+
+message VerifyChunkResponse {
+  bool valid = 1;
+  string checksum = 2;
+  string message = 3;
+}
+
+service StorageService {
+  rpc WriteChunk(WriteChunkRequest) returns (WriteChunkResponse);
+  rpc ReadChunk(ReadChunkRequest) returns (ReadChunkResponse);
+  rpc DeleteChunk(DeleteChunkRequest) returns (DeleteChunkResponse);
+  rpc ReplicateChunk(ReplicateChunkRequest) returns (ReplicateChunkResponse);
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+  rpc GetNodeStatus(NodeStatusRequest) returns (NodeStatusResponse);
+  rpc VerifyChunk(VerifyChunkRequest) returns (VerifyChunkResponse);
+}

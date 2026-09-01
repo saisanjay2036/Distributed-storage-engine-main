@@ -1,0 +1,116 @@
+version: "3.8"
+
+services:
+  metadata:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: dse-metadata
+    command: ["dse-metadata-service", "--address", "0.0.0.0:50051"]
+    ports:
+      - "50051:50051"
+    volumes:
+      - metadata-data:/var/lib/dse/metadata
+    networks:
+      - dse-net
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/50051"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  storage1:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: dse-storage1
+    command:
+      - dse-storage-node
+      - --node-id=storage1
+      - --address=0.0.0.0:50053
+      - --storage-path=/storage/node1
+      - --config=/etc/dse/storage1.cfg
+    ports:
+      - "50053:50053"
+    environment:
+      - DSE_METADATA_ADDRESS=metadata:50051
+      - DSE_ADVERTISE_ADDRESS=storage1:50053
+    volumes:
+      - storage1-data:/storage/node1
+    networks:
+      - dse-net
+    depends_on:
+      - metadata
+
+  storage2:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: dse-storage2
+    command:
+      - dse-storage-node
+      - --node-id=storage2
+      - --address=0.0.0.0:50054
+      - --storage-path=/storage/node2
+      - --config=/etc/dse/storage2.cfg
+    ports:
+      - "50054:50054"
+    environment:
+      - DSE_METADATA_ADDRESS=metadata:50051
+      - DSE_ADVERTISE_ADDRESS=storage2:50054
+    volumes:
+      - storage2-data:/storage/node2
+    networks:
+      - dse-net
+    depends_on:
+      - metadata
+
+  storage3:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: dse-storage3
+    command:
+      - dse-storage-node
+      - --node-id=storage3
+      - --address=0.0.0.0:50055
+      - --storage-path=/storage/node3
+      - --config=/etc/dse/storage3.cfg
+    ports:
+      - "50055:50055"
+    environment:
+      - DSE_METADATA_ADDRESS=metadata:50051
+      - DSE_ADVERTISE_ADDRESS=storage3:50055
+    volumes:
+      - storage3-data:/storage/node3
+    networks:
+      - dse-net
+    depends_on:
+      - metadata
+
+  client:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: dse-client
+    entrypoint: ["storage"]
+    command: ["list"]
+    environment:
+      - DSE_METADATA_ADDRESS=metadata:50051
+    networks:
+      - dse-net
+    depends_on:
+      - metadata
+      - storage1
+      - storage2
+      - storage3
+
+volumes:
+  metadata-data:
+  storage1-data:
+  storage2-data:
+  storage3-data:
+
+networks:
+  dse-net:
+    driver: bridge

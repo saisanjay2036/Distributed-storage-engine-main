@@ -1,0 +1,10 @@
+{
+  "name": "distributed-storage-engine",
+  "version": "1.0.0",
+  "dependencies": [
+    "grpc",
+    "protobuf",
+    "spdlog",
+    "gtest"
+  ]
+}

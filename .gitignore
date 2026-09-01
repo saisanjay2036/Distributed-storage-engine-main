@@ -1,0 +1,13 @@
+build/
+cmake-build-*/
+.vs/
+.vscode/
+*.user
+data/
+storage/
+metadata_store.json
+*.tmp
+__pycache__/
+*.pyc
+.DS_Store
+compile_commands.json
